@@ -35,5 +35,12 @@
     "aliases": ["泰拉瑞亚", "Terraria"],
     "executableNames": ["Terraria.exe"],
     "saveLocations": [{ "pathTemplate": "%DOCUMENTS%\\My Games\\Terraria\\Players", "kind": "save" }, { "pathTemplate": "%DOCUMENTS%\\My Games\\Terraria\\Worlds", "kind": "save" }]
+  },
+  {
+    "id": "thornsin",
+    "name": "ThornSin",
+    "aliases": ["ThornSin"],
+    "executableNames": ["ThornSin.exe"],
+    "saveLocations": [{ "pathTemplate": "%USERPROFILE%\\AppData\\LocalLow\\ScarletPaper\\ThornSin", "kind": "save", "excludePatterns": ["Unity\\local", "Player.log", "Player-prev.log"] }]
   }
 ]
