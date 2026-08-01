@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="AiGameSave.App/AiGameSave.App.csproj" />
+  <Project Path="AiGameSave.Core/AiGameSave.Core.csproj" />
+  <Project Path="AiGameSave.Infrastructure/AiGameSave.Infrastructure.csproj" />
+  <Project Path="AiGameSave.Tests/AiGameSave.Tests.csproj" />
+</Solution>
