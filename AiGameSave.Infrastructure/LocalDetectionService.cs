@@ -6,6 +6,12 @@ namespace AiGameSave.Infrastructure;
 public sealed class LocalDetectionService : ILocalDetectionService
 {
     private readonly PathTemplateResolver _resolver = new();
+    private readonly IEngineDetectionService _engineDetection;
+
+    public LocalDetectionService(IEngineDetectionService? engineDetection = null)
+    {
+        _engineDetection = engineDetection ?? new EngineDetectionService();
+    }
 
     public async Task<IReadOnlyList<CandidateLocation>> ScanAsync(ResearchRequest request, IReadOnlyList<CandidateLocation> researchCandidates, CancellationToken cancellationToken = default)
     {
@@ -39,13 +45,9 @@ public sealed class LocalDetectionService : ILocalDetectionService
                 if (ContainsSaveLikeFiles(gameDirectory))
                     Add(candidates, Build(gameDirectory, new[] { new Evidence("game-directory", "游戏目录中存在疑似存档文件", 35) }, 35));
 
-                var unityIdentity = ReadUnityIdentity(gameDirectory);
-                if (unityIdentity is not null)
-                {
-                    var unityPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "AppData", "LocalLow", unityIdentity.Value.Company, unityIdentity.Value.Product);
-                    var evidence = new[] { new Evidence("unity-app-info", $"Unity app.info 识别到开发商 {unityIdentity.Value.Company} 和产品名 {unityIdentity.Value.Product}", 50) };
-                    Add(candidates, Build(unityPath, evidence, Directory.Exists(unityPath) ? 75 : 50));
-                }
+                var engineResult = await _engineDetection.DetectAsync(gameDirectory, request.ExecutablePath, cancellationToken);
+                foreach (var candidate in engineResult.Candidates)
+                    Add(candidates, candidate);
             }
         }
 
@@ -174,19 +176,4 @@ public sealed class LocalDetectionService : ILocalDetectionService
             if (token.Length >= 3) yield return token;
     }
 
-    private static (string Company, string Product)? ReadUnityIdentity(string gameDirectory)
-    {
-        try
-        {
-            var exeName = Path.GetFileNameWithoutExtension(gameDirectory);
-            var candidates = Directory.EnumerateFiles(gameDirectory, "app.info", SearchOption.TopDirectoryOnly)
-                .Concat(Directory.EnumerateFiles(gameDirectory, "app.info", SearchOption.AllDirectories).Take(1));
-            var file = candidates.FirstOrDefault(path => path.Contains("_Data", StringComparison.OrdinalIgnoreCase));
-            if (file is null) return null;
-            var lines = File.ReadAllLines(file).Select(x => x.Trim()).Where(x => x.Length > 0).Take(2).ToArray();
-            if (lines.Length < 2 || lines.Any(x => x.Length > 120 || x.Contains(Path.DirectorySeparatorChar))) return null;
-            return (lines[0], lines[1]);
-        }
-        catch { return null; }
-    }
 }

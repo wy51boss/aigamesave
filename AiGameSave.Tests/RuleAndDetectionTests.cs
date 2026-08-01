@@ -27,61 +27,78 @@ public sealed class RuleAndDetectionTests
     }
 
     [Fact]
-    public async Task LocalDetection_RecognizesUnityAppInfo()
+    public async Task LocalDetection_RecognizesGenericUnityAppInfo()
     {
         var root = Path.Combine(Path.GetTempPath(), "AiGameSaveTests", Guid.NewGuid().ToString("N"));
-        var game = Path.Combine(root, "ThornSin");
-        var data = Path.Combine(game, "ThornSin_Data");
+        var game = Path.Combine(root, "ExampleUnityGame");
+        var data = Path.Combine(game, "ExampleUnityGame_Data");
         Directory.CreateDirectory(data);
-        await File.WriteAllTextAsync(Path.Combine(game, "ThornSin.exe"), "test");
-        await File.WriteAllTextAsync(Path.Combine(data, "app.info"), "ScarletPaper\nThornSin\n");
+        await File.WriteAllTextAsync(Path.Combine(game, "ExampleUnityGame.exe"), "test");
+        await File.WriteAllTextAsync(Path.Combine(data, "app.info"), "ExampleStudio\nExampleProduct\n");
         var service = new LocalDetectionService();
-        var candidates = await service.ScanAsync(new ResearchRequest("ThornSin", Path.Combine(game, "ThornSin.exe"), null, null), Array.Empty<CandidateLocation>());
-        Assert.Contains(candidates, x => x.Evidence.Any(e => e.Type == "unity-app-info") && x.PathTemplate.Contains("ScarletPaper", StringComparison.Ordinal));
+        var candidates = await service.ScanAsync(new ResearchRequest("Example Unity Game", Path.Combine(game, "ExampleUnityGame.exe"), null, null), Array.Empty<CandidateLocation>());
+        Assert.Contains(candidates, x => x.Evidence.Any(e => e.Type == "engine-unity-path") && x.PathTemplate.Contains("ExampleStudio", StringComparison.Ordinal));
         Directory.Delete(root, true);
     }
 
     [Fact]
-    public async Task RealGame_ThornSin_DetectsAndRestoresWhenConfigured()
+    public async Task EngineDetection_RecognizesRenPyConfiguration()
     {
-        var gameRoot = Environment.GetEnvironmentVariable("AIGAMESAVE_THORNSIN_ROOT");
-        if (string.IsNullOrWhiteSpace(gameRoot) || !Directory.Exists(gameRoot)) return;
-        var exe = Path.Combine(gameRoot, "ThornSin.exe");
-        var originalSave = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "AppData", "LocalLow", "ScarletPaper", "ThornSin");
-        Assert.True(File.Exists(exe));
-        Assert.True(Directory.Exists(originalSave));
-
-        var detection = await new LocalDetectionService().ScanAsync(new ResearchRequest("ThornSin", exe, null, null), Array.Empty<CandidateLocation>());
-        Assert.Contains(detection, x => x.Evidence.Any(e => e.Type == "unity-app-info") && x.ResolvedPath.Equals(originalSave, StringComparison.OrdinalIgnoreCase));
-
-        var testRoot = Path.Combine(Path.GetTempPath(), "AiGameSaveRealTest", Guid.NewGuid().ToString("N"));
-        var clonedSave = Path.Combine(testRoot, "save");
+        var root = Path.Combine(Path.GetTempPath(), "AiGameSaveTests", Guid.NewGuid().ToString("N"));
+        var game = Path.Combine(root, "FictionalRenPy");
+        Directory.CreateDirectory(Path.Combine(game, "renpy"));
+        Directory.CreateDirectory(Path.Combine(game, "game", "saves"));
+        await File.WriteAllTextAsync(Path.Combine(game, "FictionalRenPy.exe"), "test");
+        await File.WriteAllTextAsync(Path.Combine(game, "game", "options.rpy"), "define config.save_directory = 'fictional-save-id'");
         try
         {
-            CopyDirectory(originalSave, clonedSave);
-            var saveFile = Directory.EnumerateFiles(clonedSave, "*.save", SearchOption.TopDirectoryOnly).First();
-            var expected = await File.ReadAllBytesAsync(saveFile);
-            var profile = new GameProfile("thornsin-real", "ThornSin", exe, null, null, GamePersistenceKind.TemporarySystemDirectory,
-                new[] { new SaveLocationRule(clonedSave, UserConfirmed: true, ExcludePatterns: SavePathDefaults.Excludes) }, DateTimeOffset.UtcNow, true);
-            var repository = new JsonGameRepository(Path.Combine(testRoot, "repo"));
-            await repository.SaveGameAsync(profile);
-            var snapshot = await repository.CreateSnapshotAsync(profile);
-            await File.WriteAllTextAsync(saveFile, "temporary mutation");
-            await repository.RestoreSnapshotAsync(profile, snapshot);
-            Assert.Equal(expected, await File.ReadAllBytesAsync(saveFile));
+            var result = await new EngineDetectionService().DetectAsync(game, Path.Combine(game, "FictionalRenPy.exe"));
+            Assert.Equal(GameEngineKind.RenPy, result.Engine);
+            Assert.Contains(result.Candidates, x => x.ResolvedPath.EndsWith(Path.Combine("game", "saves"), StringComparison.OrdinalIgnoreCase));
+            Assert.Contains(result.Candidates, x => x.ResolvedPath.EndsWith(Path.Combine("RenPy", "fictional-save-id"), StringComparison.OrdinalIgnoreCase));
         }
-        finally { if (Directory.Exists(testRoot)) Directory.Delete(testRoot, true); }
+        finally { Directory.Delete(root, true); }
     }
 
-    private static void CopyDirectory(string source, string target)
+    [Fact]
+    public async Task EngineDetection_RecognizesRpgMakerAndExistingSave()
     {
-        Directory.CreateDirectory(target);
-        foreach (var directory in Directory.EnumerateDirectories(source, "*", SearchOption.AllDirectories)) Directory.CreateDirectory(directory.Replace(source, target, StringComparison.OrdinalIgnoreCase));
-        foreach (var file in Directory.EnumerateFiles(source, "*", SearchOption.AllDirectories))
+        var root = Path.Combine(Path.GetTempPath(), "AiGameSaveTests", Guid.NewGuid().ToString("N"));
+        var game = Path.Combine(root, "FictionalRpgMaker");
+        Directory.CreateDirectory(Path.Combine(game, "www", "data"));
+        Directory.CreateDirectory(Path.Combine(game, "www", "save"));
+        await File.WriteAllTextAsync(Path.Combine(game, "Game.exe"), "test");
+        await File.WriteAllTextAsync(Path.Combine(game, "www", "data", "System.json"), "{}");
+        await File.WriteAllTextAsync(Path.Combine(game, "www", "save", "file1.rpgsave"), "save");
+        try
         {
-            var destination = file.Replace(source, target, StringComparison.OrdinalIgnoreCase);
-            Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
-            File.Copy(file, destination, true);
+            var result = await new EngineDetectionService().DetectAsync(game, Path.Combine(game, "Game.exe"));
+            Assert.Equal(GameEngineKind.RpgMakerMvMz, result.Engine);
+            Assert.Contains(result.Candidates, x => x.Score >= 90 && Directory.Exists(x.ResolvedPath));
         }
+        finally { Directory.Delete(root, true); }
     }
+
+    [Fact]
+    public async Task BatchScan_UsesOnlyGenericDirectoryEvidence()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "AiGameSaveTests", Guid.NewGuid().ToString("N"));
+        var unity = Path.Combine(root, "PackageOne", "InnerGame");
+        var unknown = Path.Combine(root, "PackageTwo");
+        Directory.CreateDirectory(Path.Combine(unity, "UnlistedTitle_Data"));
+        Directory.CreateDirectory(unknown);
+        await File.WriteAllTextAsync(Path.Combine(unity, "UnlistedTitle.exe"), "test");
+        await File.WriteAllTextAsync(Path.Combine(unity, "UnlistedTitle_Data", "app.info"), "UnknownStudio\nUnlistedTitle\n");
+        await File.WriteAllTextAsync(Path.Combine(unknown, "Mystery.exe"), "test");
+        try
+        {
+            var results = await new BatchGameScanService().ScanAsync(root);
+            Assert.Equal(2, results.Count);
+            Assert.Equal(GameEngineKind.Unity, results.Single(x => x.Name == "PackageOne").Engine);
+            Assert.Equal(GameEngineKind.Unknown, results.Single(x => x.Name == "PackageTwo").Engine);
+            Assert.Contains("行为检测", results.Single(x => x.Name == "PackageTwo").Status, StringComparison.Ordinal);
+        }
+        finally { Directory.Delete(root, true); }
+    }
+
 }

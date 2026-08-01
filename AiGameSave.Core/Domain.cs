@@ -2,6 +2,7 @@ namespace AiGameSave.Core;
 
 public enum CandidateConfidence { Low, Possible, High, Verified }
 public enum GamePersistenceKind { Unknown, PersistentGameDirectory, PersistentSaveOutsideGame, TemporarySystemDirectory }
+public enum GameEngineKind { Unknown, Unity, RenPy, RpgMakerMvMz, RpgMakerLegacy, Unreal, Godot, GameMaker, WolfRpg, NwJs }
 
 public sealed record Evidence(string Type, string Description, int Weight, string? SourceUrl = null);
 
@@ -53,6 +54,8 @@ public sealed record ModelProfile(string BaseUrl, string Model, string Protocol 
 public sealed record ResearchRequest(string GameName, string? ExecutablePath, string? Platform, string? AppId);
 public sealed record ResearchResult(string GameName, IReadOnlyList<CandidateLocation> Candidates, string Summary, bool UsedWebSearch);
 public sealed record GameRuleDefinition(string Id, string Name, IReadOnlyList<string> Aliases, IReadOnlyList<string> ExecutableNames, IReadOnlyList<SaveLocationRule> SaveLocations, string? Platform = null, string? AppId = null);
+public sealed record EngineDetectionResult(GameEngineKind Engine, IReadOnlyList<CandidateLocation> Candidates, IReadOnlyList<Evidence> Evidence);
+public sealed record BatchGameScanItem(string Name, string RootPath, string? ExecutablePath, GameEngineKind Engine, IReadOnlyList<CandidateLocation> Candidates, string Status);
 
 public interface IPathTemplateResolver
 {
@@ -88,6 +91,16 @@ public interface ILocalDetectionService
 {
     Task<IReadOnlyList<CandidateLocation>> ScanAsync(ResearchRequest request, IReadOnlyList<CandidateLocation> researchCandidates, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<CandidateLocation>> VerifySaveWindowAsync(ResearchRequest request, IReadOnlyList<CandidateLocation> candidates, TimeSpan window, CancellationToken cancellationToken = default);
+}
+
+public interface IEngineDetectionService
+{
+    Task<EngineDetectionResult> DetectAsync(string gameRoot, string? executablePath, CancellationToken cancellationToken = default);
+}
+
+public interface IBatchGameScanService
+{
+    Task<IReadOnlyList<BatchGameScanItem>> ScanAsync(string rootPath, CancellationToken cancellationToken = default);
 }
 
 public static class SavePathDefaults

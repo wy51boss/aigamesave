@@ -1,0 +1,32 @@
+<Window x:Class="AiGameSave.App.BatchScanWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="批量本地扫描结果" Height="720" Width="1280"
+        MinHeight="520" MinWidth="900" WindowStartupLocation="CenterOwner">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <DockPanel Grid.Row="0" Margin="0,0,0,10">
+            <Button DockPanel.Dock="Right" Content="导出 JSON" Click="Export_Click" />
+            <StackPanel>
+                <TextBlock Text="批量本地扫描" FontSize="22" FontWeight="SemiBold" />
+                <TextBlock x:Name="SummaryText" Foreground="#555" TextWrapping="Wrap" />
+            </StackPanel>
+        </DockPanel>
+        <DataGrid x:Name="ResultsGrid" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True"
+                  CanUserAddRows="False" SelectionMode="Single" HeadersVisibility="Column">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="游戏目录" Binding="{Binding Name}" Width="1.3*" />
+                <DataGridTextColumn Header="引擎" Binding="{Binding Engine}" Width="110" />
+                <DataGridTextColumn Header="状态" Binding="{Binding Status}" Width="190" />
+                <DataGridTextColumn Header="主程序" Binding="{Binding ExecutablePath}" Width="1.5*" />
+                <DataGridTextColumn Header="候选路径与依据" Binding="{Binding CandidateSummary}" Width="2.5*" />
+            </DataGrid.Columns>
+        </DataGrid>
+        <TextBlock Grid.Row="2" Margin="0,10,0,0" Foreground="#666" TextWrapping="Wrap"
+                   Text="本结果只使用本机目录结构和现有文件；未调用 AI、网页搜索或游戏专用规则。未知项需要运行游戏并执行一次保存后再做行为检测。" />
+    </Grid>
+</Window>

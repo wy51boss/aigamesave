@@ -13,6 +13,7 @@
 
         <DockPanel Grid.Row="0" Margin="0,0,0,12">
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                <Button Content="批量本地扫描" Click="BatchScan_Click" />
                 <TextBlock Text="持久仓库" VerticalAlignment="Center" />
                 <TextBox x:Name="RepositoryPathText" Width="330" />
                 <Button Content="应用仓库" Click="ApplyRepository_Click" />

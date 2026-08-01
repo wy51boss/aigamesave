@@ -50,6 +50,18 @@ public partial class MainWindow : Window
         }
     }
 
+    private async void BatchScan_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new OpenFolderDialog { Title = "选择包含多个游戏的目录", Multiselect = false };
+        if (dialog.ShowDialog() != true) return;
+        await RunBusyAsync(async () =>
+        {
+            var results = await new BatchGameScanService().ScanAsync(dialog.FolderName);
+            new BatchScanWindow(dialog.FolderName, results) { Owner = this }.ShowDialog();
+            SetStatus($"批量本地扫描完成：共 {results.Count} 个目录。", false);
+        });
+    }
+
     private async void Research_Click(object sender, RoutedEventArgs e)
     {
         await RunBusyAsync(async () =>
