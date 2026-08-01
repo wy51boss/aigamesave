@@ -38,6 +38,14 @@ public sealed class LocalDetectionService : ILocalDetectionService
             {
                 if (ContainsSaveLikeFiles(gameDirectory))
                     Add(candidates, Build(gameDirectory, new[] { new Evidence("game-directory", "游戏目录中存在疑似存档文件", 35) }, 35));
+
+                var unityIdentity = ReadUnityIdentity(gameDirectory);
+                if (unityIdentity is not null)
+                {
+                    var unityPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "AppData", "LocalLow", unityIdentity.Value.Company, unityIdentity.Value.Product);
+                    var evidence = new[] { new Evidence("unity-app-info", $"Unity app.info 识别到开发商 {unityIdentity.Value.Company} 和产品名 {unityIdentity.Value.Product}", 50) };
+                    Add(candidates, Build(unityPath, evidence, Directory.Exists(unityPath) ? 75 : 50));
+                }
             }
         }
 
@@ -132,7 +140,17 @@ public sealed class LocalDetectionService : ILocalDetectionService
         IEnumerable<string> files;
         try { files = Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories).ToArray(); }
         catch { return Array.Empty<string>(); }
-        return files.Where(file => !excludes.Any(x => file.Contains(x, StringComparison.OrdinalIgnoreCase)));
+        return files.Where(file =>
+        {
+            var relative = Path.GetRelativePath(root, file).Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+            return !excludes.Any(pattern =>
+            {
+                pattern = pattern.Trim().Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar).Trim(Path.DirectorySeparatorChar);
+                return relative.Equals(pattern, StringComparison.OrdinalIgnoreCase)
+                    || relative.StartsWith(pattern + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)
+                    || relative.Split(Path.DirectorySeparatorChar).Any(segment => segment.Equals(pattern, StringComparison.OrdinalIgnoreCase));
+            });
+        });
     }
 
     private static bool ContainsSaveLikeFiles(string directory)
@@ -154,5 +172,21 @@ public sealed class LocalDetectionService : ILocalDetectionService
         yield return gameName.Trim();
         foreach (var token in gameName.Split(new[] { ' ', '-', '_' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
             if (token.Length >= 3) yield return token;
+    }
+
+    private static (string Company, string Product)? ReadUnityIdentity(string gameDirectory)
+    {
+        try
+        {
+            var exeName = Path.GetFileNameWithoutExtension(gameDirectory);
+            var candidates = Directory.EnumerateFiles(gameDirectory, "app.info", SearchOption.TopDirectoryOnly)
+                .Concat(Directory.EnumerateFiles(gameDirectory, "app.info", SearchOption.AllDirectories).Take(1));
+            var file = candidates.FirstOrDefault(path => path.Contains("_Data", StringComparison.OrdinalIgnoreCase));
+            if (file is null) return null;
+            var lines = File.ReadAllLines(file).Select(x => x.Trim()).Where(x => x.Length > 0).Take(2).ToArray();
+            if (lines.Length < 2 || lines.Any(x => x.Length > 120 || x.Contains(Path.DirectorySeparatorChar))) return null;
+            return (lines[0], lines[1]);
+        }
+        catch { return null; }
     }
 }
