@@ -162,11 +162,20 @@ public sealed class JsonGameRepository : IGameRepository
         try { files = Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories); } catch { yield break; }
         foreach (var file in files)
         {
-            var lower = file.ToLowerInvariant();
-            if (excludes.Any(x => lower.Contains(x.ToLowerInvariant()))) continue;
+            var relative = Path.GetRelativePath(root, file);
+            if (excludes.Any(x => IsExcludedRelativePath(relative, x))) continue;
             if (new FileInfo(file).Length > 2L * 1024 * 1024 * 1024) continue;
             yield return file;
         }
+    }
+
+    private static bool IsExcludedRelativePath(string relative, string pattern)
+    {
+        relative = relative.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+        pattern = pattern.Trim().Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar).Trim(Path.DirectorySeparatorChar);
+        return relative.Equals(pattern, StringComparison.OrdinalIgnoreCase)
+            || relative.StartsWith(pattern + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)
+            || relative.Split(Path.DirectorySeparatorChar).Any(segment => segment.Equals(pattern, StringComparison.OrdinalIgnoreCase));
     }
 
     private static async Task<string> Sha256Async(string file, CancellationToken cancellationToken)
