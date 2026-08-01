@@ -1,0 +1,39 @@
+[
+  {
+    "id": "elden-ring",
+    "name": "Elden Ring",
+    "aliases": ["艾尔登法环", "Elden Ring"],
+    "executableNames": ["eldenring.exe"],
+    "platform": "steam",
+    "appId": "1245620",
+    "saveLocations": [{ "pathTemplate": "%APPDATA%\\EldenRing\\*", "kind": "save", "excludePatterns": ["logs", "cache"] }]
+  },
+  {
+    "id": "stardew-valley",
+    "name": "Stardew Valley",
+    "aliases": ["星露谷物语", "Stardew Valley"],
+    "executableNames": ["Stardew Valley.exe"],
+    "saveLocations": [{ "pathTemplate": "%APPDATA%\\StardewValley\\Saves", "kind": "save" }]
+  },
+  {
+    "id": "the-witcher-3",
+    "name": "The Witcher 3",
+    "aliases": ["巫师3", "The Witcher 3"],
+    "executableNames": ["witcher3.exe"],
+    "saveLocations": [{ "pathTemplate": "%DOCUMENTS%\\The Witcher 3\\gamesaves", "kind": "save" }]
+  },
+  {
+    "id": "cyberpunk-2077",
+    "name": "Cyberpunk 2077",
+    "aliases": ["赛博朋克2077", "Cyberpunk 2077"],
+    "executableNames": ["Cyberpunk2077.exe"],
+    "saveLocations": [{ "pathTemplate": "%USERPROFILE%\\Saved Games\\CD Projekt Red\\Cyberpunk 2077", "kind": "save" }]
+  },
+  {
+    "id": "terraria",
+    "name": "Terraria",
+    "aliases": ["泰拉瑞亚", "Terraria"],
+    "executableNames": ["Terraria.exe"],
+    "saveLocations": [{ "pathTemplate": "%DOCUMENTS%\\My Games\\Terraria\\Players", "kind": "save" }, { "pathTemplate": "%DOCUMENTS%\\My Games\\Terraria\\Worlds", "kind": "save" }]
+  }
+]
