@@ -1,0 +1,11 @@
+**/bin/
+**/obj/
+artifacts/
+*.zip
+.vs/
+.idea/
+*.user
+*.suo
+AiGameSaveData/
+credentials.vault
+*.log
