@@ -94,7 +94,7 @@ public static class SavePathDefaults
 {
     public static readonly string[] Roots =
     {
-        "%USERPROFILE%\\Documents\\My Games", "%USERPROFILE%\\Saved Games", "%APPDATA%", "%LOCALAPPDATA%", "%PROGRAMDATA%"
+        "%USERPROFILE%\\Documents\\My Games", "%USERPROFILE%\\Saved Games", "%APPDATA%", "%LOCALAPPDATA%", "%USERPROFILE%\\AppData\\LocalLow", "%PROGRAMDATA%"
     };
     public static readonly string[] Excludes = { "cache", "caches", "logs", "log", "crashdumps", "shadercache", "temp", "tmp" };
 }
