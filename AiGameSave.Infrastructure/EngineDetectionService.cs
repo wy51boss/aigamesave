@@ -7,7 +7,7 @@ public sealed class EngineDetectionService : IEngineDetectionService
 {
     private static readonly HashSet<string> SaveExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
-        ".save", ".sav", ".rpgsave", ".rvdata", ".rvdata2", ".rxdata", ".sol", ".lsd"
+        ".save", ".sav", ".rpgsave", ".rmmzsave", ".rvdata", ".rvdata2", ".rxdata", ".sol", ".lsd"
     };
 
     public Task<EngineDetectionResult> DetectAsync(string gameRoot, string? executablePath, CancellationToken cancellationToken = default)

@@ -8,7 +8,7 @@ public sealed class BatchSaveExportService : IBatchSaveExportService
 {
     private static readonly HashSet<string> SaveExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
-        ".save", ".sav", ".rpgsave", ".rvdata", ".rvdata2", ".rxdata", ".sol", ".lsd", ".dat", ".bin", ".json", ".db", ".profile"
+        ".save", ".sav", ".rpgsave", ".rmmzsave", ".rvdata", ".rvdata2", ".rxdata", ".sol", ".lsd", ".dat", ".bin", ".json", ".db", ".profile"
     };
 
     private readonly IBatchGameScanService _scanner;
@@ -122,7 +122,10 @@ public sealed class BatchSaveExportService : IBatchSaveExportService
             || name.Contains("save", StringComparison.OrdinalIgnoreCase)
             || name.Contains("slot", StringComparison.OrdinalIgnoreCase)
             || name.Contains("profile", StringComparison.OrdinalIgnoreCase)
-            || segments.Any(segment => segment.Equals("save", StringComparison.OrdinalIgnoreCase) || segment.Equals("saves", StringComparison.OrdinalIgnoreCase));
+            || segments.Any(segment => segment.Equals("save", StringComparison.OrdinalIgnoreCase)
+                || segment.Equals("saves", StringComparison.OrdinalIgnoreCase)
+                || segment.Equals("savedata", StringComparison.OrdinalIgnoreCase)
+                || segment.Equals("save_data", StringComparison.OrdinalIgnoreCase));
     }
 
     private static bool IsExcluded(string relative, string pattern)

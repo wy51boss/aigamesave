@@ -112,14 +112,16 @@ public sealed class RuleAndDetectionTests
         await File.WriteAllTextAsync(Path.Combine(game, "Game.exe"), "test");
         await File.WriteAllTextAsync(Path.Combine(game, "www", "data", "System.json"), "{}");
         await File.WriteAllTextAsync(Path.Combine(game, "www", "save", "file1.rpgsave"), "save-bytes");
+        await File.WriteAllTextAsync(Path.Combine(game, "www", "save", "file2.rmmzsave"), "mz-save-bytes");
         await File.WriteAllTextAsync(Path.Combine(game, "www", "save", "readme.txt"), "not a save");
         try
         {
             var report = await new BatchSaveExportService().ExportAsync(root, output);
             var item = Assert.Single(report.Items);
             Assert.Equal("成功", item.Status);
-            Assert.Equal(1, item.FilesCopied);
+            Assert.Equal(2, item.FilesCopied);
             Assert.True(File.Exists(Path.Combine(output, "ExportFixture", "candidate-1", "file1.rpgsave")));
+            Assert.True(File.Exists(Path.Combine(output, "ExportFixture", "candidate-1", "file2.rmmzsave")));
             Assert.False(File.Exists(Path.Combine(output, "ExportFixture", "candidate-1", "readme.txt")));
             Assert.True(File.Exists(Path.Combine(output, "scan-export-report.json")));
         }
