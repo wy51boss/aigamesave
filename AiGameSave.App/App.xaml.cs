@@ -11,6 +11,23 @@ public partial class App : Application
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        var exportIndex = Array.FindIndex(e.Args, argument => argument.Equals("--batch-export-saves", StringComparison.OrdinalIgnoreCase));
+        if (exportIndex >= 0)
+        {
+            try
+            {
+                if (exportIndex + 2 >= e.Args.Length) throw new ArgumentException("--batch-export-saves 后必须提供游戏目录和导出目录。");
+                var root = Path.GetFullPath(e.Args[exportIndex + 1]);
+                var output = Path.GetFullPath(e.Args[exportIndex + 2]);
+                await new BatchSaveExportService().ExportAsync(root, output);
+                Shutdown(0);
+            }
+            catch
+            {
+                Shutdown(1);
+            }
+            return;
+        }
         var scanIndex = Array.FindIndex(e.Args, argument => argument.Equals("--batch-scan", StringComparison.OrdinalIgnoreCase));
         if (scanIndex >= 0)
         {

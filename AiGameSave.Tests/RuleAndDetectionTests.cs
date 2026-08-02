@@ -101,4 +101,33 @@ public sealed class RuleAndDetectionTests
         finally { Directory.Delete(root, true); }
     }
 
+    [Fact]
+    public async Task BatchSaveExport_CopiesOnlyDetectedSaveFilesAndWritesReport()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "AiGameSaveTests", Guid.NewGuid().ToString("N"));
+        var game = Path.Combine(root, "ExportFixture");
+        var output = root + "-output";
+        Directory.CreateDirectory(Path.Combine(game, "www", "data"));
+        Directory.CreateDirectory(Path.Combine(game, "www", "save"));
+        await File.WriteAllTextAsync(Path.Combine(game, "Game.exe"), "test");
+        await File.WriteAllTextAsync(Path.Combine(game, "www", "data", "System.json"), "{}");
+        await File.WriteAllTextAsync(Path.Combine(game, "www", "save", "file1.rpgsave"), "save-bytes");
+        await File.WriteAllTextAsync(Path.Combine(game, "www", "save", "readme.txt"), "not a save");
+        try
+        {
+            var report = await new BatchSaveExportService().ExportAsync(root, output);
+            var item = Assert.Single(report.Items);
+            Assert.Equal("成功", item.Status);
+            Assert.Equal(1, item.FilesCopied);
+            Assert.True(File.Exists(Path.Combine(output, "ExportFixture", "candidate-1", "file1.rpgsave")));
+            Assert.False(File.Exists(Path.Combine(output, "ExportFixture", "candidate-1", "readme.txt")));
+            Assert.True(File.Exists(Path.Combine(output, "scan-export-report.json")));
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, true);
+            if (Directory.Exists(output)) Directory.Delete(output, true);
+        }
+    }
+
 }

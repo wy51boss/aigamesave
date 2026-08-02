@@ -56,6 +56,8 @@ public sealed record ResearchResult(string GameName, IReadOnlyList<CandidateLoca
 public sealed record GameRuleDefinition(string Id, string Name, IReadOnlyList<string> Aliases, IReadOnlyList<string> ExecutableNames, IReadOnlyList<SaveLocationRule> SaveLocations, string? Platform = null, string? AppId = null);
 public sealed record EngineDetectionResult(GameEngineKind Engine, IReadOnlyList<CandidateLocation> Candidates, IReadOnlyList<Evidence> Evidence);
 public sealed record BatchGameScanItem(string Name, string RootPath, string? ExecutablePath, GameEngineKind Engine, IReadOnlyList<CandidateLocation> Candidates, string Status);
+public sealed record SaveExportItem(string GameName, string Status, string? SourcePath, string? ExportPath, int FilesCopied, string Reason, IReadOnlyList<string>? SourcePaths = null, IReadOnlyList<string>? ExportPaths = null);
+public sealed record BatchSaveExportReport(DateTimeOffset GeneratedAt, string RootPath, string OutputPath, IReadOnlyList<SaveExportItem> Items, bool UsedAi = false, bool UsedWebSearch = false, bool UsedGameSpecificRules = false);
 
 public interface IPathTemplateResolver
 {
@@ -101,6 +103,11 @@ public interface IEngineDetectionService
 public interface IBatchGameScanService
 {
     Task<IReadOnlyList<BatchGameScanItem>> ScanAsync(string rootPath, CancellationToken cancellationToken = default);
+}
+
+public interface IBatchSaveExportService
+{
+    Task<BatchSaveExportReport> ExportAsync(string rootPath, string outputPath, CancellationToken cancellationToken = default);
 }
 
 public static class SavePathDefaults

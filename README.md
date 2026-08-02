@@ -32,6 +32,14 @@ dotnet .\AiGameSave.App\bin\Release\net8.0-windows\AiGameSave.App.dll `
   --report ".\artifacts\software-local-scan.json"
 ```
 
+使用软件批量导出已发现的存档文件（不会导出日志或未知候选）：
+
+```powershell
+dotnet .\AiGameSave.App\bin\Release\net8.0-windows\AiGameSave.App.dll `
+  --batch-export-saves "E:\Games" `
+  "$env:USERPROFILE\Downloads\gamesave"
+```
+
 报告会明确记录 `usedAi=false`、`usedWebSearch=false` 和 `usedGameSpecificRules=false`。静态扫描不能确认的游戏会显示“需要行为检测”，不会自动填入猜测结果。
 
 ## 发布便携版
