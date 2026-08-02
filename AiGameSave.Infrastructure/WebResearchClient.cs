@@ -13,7 +13,7 @@ public sealed class WebResearchClient
 
     public WebResearchClient(HttpClient? httpClient = null)
     {
-        _http = httpClient ?? new HttpClient();
+        _http = httpClient ?? new HttpClient(new HttpClientHandler { UseProxy = false });
         _http.Timeout = TimeSpan.FromSeconds(10);
         _http.DefaultRequestHeaders.UserAgent.ParseAdd("AiGameSave/0.1 (save location research)");
     }
